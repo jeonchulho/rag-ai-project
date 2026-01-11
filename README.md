@@ -1,362 +1,191 @@
-# RAG AI Project
+# Enterprise RAG System
 
-A comprehensive Retrieval-Augmented Generation (RAG) system that combines the power of large language models with efficient information retrieval to provide accurate, context-aware responses.
+대규모 멀티모달 RAG 시스템 - 동시 500명 이상 지원
 
-## 📋 Table of Contents
+## 🎯 주요 기능
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Configuration](#configuration)
-- [Project Structure](#project-structure)
-- [Technologies](#technologies)
-- [Contributing](#contributing)
-- [License](#license)
+- **멀티모달 검색**: 텍스트, 이미지, 문서 통합 검색
+- **자연어 처리**: "AI 논문 검색해서 요약본을 홍길동에게 10시에 메일 보내줘" 같은 복잡한 요청 처리
+- **스케줄링**: 예약된 시간에 자동으로 액션 실행
+- **고가용성**: 로드 밸런싱, 캐싱, 분산 처리
+- **확장성**: 수평 확장 가능한 마이크로서비스 아키텍처
 
-## 🔍 Overview
-
-This RAG AI project implements a state-of-the-art retrieval-augmented generation system that enhances large language model responses by retrieving relevant information from a knowledge base. The system enables accurate, contextual answers by combining semantic search with generative AI capabilities.
-
-## 🏗️ Architecture
-
-The system follows a multi-stage RAG architecture:
+## 🏗️ 시스템 아키텍처
 
 ```
-┌─────────────┐
-│   User      │
-│   Query     │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────────────────────────┐
-│   Query Processing              │
-│   - Tokenization                │
-│   - Embedding Generation        │
-└──────┬──────────────────────────┘
-       │
-       ▼
-┌─────────────────────────────────┐
-│   Vector Database               │
-│   - Semantic Search             │
-│   - Similarity Matching         │
-│   - Document Retrieval          │
-└──────┬──────────────────────────┘
-       │
-       ▼
-┌─────────────────────────────────┐
-│   Context Assembly              │
-│   - Rank Documents              │
-│   - Create Prompt Context       │
-└──────┬──────────────────────────┘
-       │
-       ▼
-┌─────────────────────────────────┐
-│   LLM Generation                │
-│   - Context-aware Response      │
-│   - Answer Synthesis            │
-└──────┬──────────────────────────┘
-       │
-       ▼
-┌─────────────────────────────────┐
-│   Response Post-processing      │
-│   - Formatting                  │
-│   - Citation Addition           │
-└──────┬──────────────────────────┘
-       │
-       ▼
-┌─────────────┐
-│   Final     │
-│   Response  │
-└─────────────┘
+Load Balancer (Nginx)
+    ↓
+API Servers (FastAPI) x3
+    ↓
+Processing Layer
+├── Ollama Servers x3 (GPU)
+├── Milvus (Vector DB)
+├── Redis (Cache/Queue)
+└── PostgreSQL (Metadata)
+    ↓
+Async Workers (Celery)
 ```
 
-### Key Components:
+## 🚀 빠른 시작
 
-1. **Document Ingestion Pipeline**: Processes and chunks documents for efficient retrieval
-2. **Embedding Engine**: Converts text into high-dimensional vector representations
-3. **Vector Store**: Stores and indexes embeddings for fast similarity search
-4. **Retrieval System**: Finds the most relevant documents based on query similarity
-5. **LLM Integration**: Generates responses using retrieved context
-6. **API Layer**: Provides REST API endpoints for easy integration
+### 1. 사전 요구사항
 
-## ✨ Features
+- Docker & Docker Compose
+- NVIDIA GPU (권장: 3개 이상)
+- 16GB+ RAM
+- 100GB+ 디스크 공간
 
-- **🔎 Semantic Search**: Advanced vector-based similarity search for accurate document retrieval
-- **📚 Multi-Format Support**: Ingest documents from PDF, DOCX, TXT, MD, and more
-- **🤖 Multiple LLM Support**: Compatible with OpenAI, Anthropic, HuggingFace, and local models
-- **⚡ Real-time Processing**: Fast query processing and response generation
-- **📊 Context Ranking**: Intelligent ranking of retrieved documents by relevance
-- **🔒 Privacy-First**: Option to run entirely locally without external API calls
-- **📈 Scalable Architecture**: Designed to handle large document collections
-- **🎯 Customizable Prompts**: Flexible prompt engineering for different use cases
-- **📝 Source Citations**: Automatic citation of source documents in responses
-- **🔄 Incremental Updates**: Add documents without rebuilding entire index
-- **🌐 REST API**: Easy integration with web and mobile applications
-- **📱 Web Interface**: User-friendly chat interface for testing and demos
-
-## 🚀 Installation
-
-### Prerequisites
-
-- Python 3.9 or higher
-- pip package manager
-- Virtual environment (recommended)
-- Minimum 8GB RAM
-- (Optional) GPU for faster embedding generation
-
-### Step 1: Clone the Repository
+### 2. 환경 설정
 
 ```bash
+# 저장소 클론
 git clone https://github.com/jeonchulho/rag-ai-project.git
 cd rag-ai-project
-```
 
-### Step 2: Create Virtual Environment
-
-```bash
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# On Linux/Mac:
-source venv/bin/activate
-# On Windows:
-venv\Scripts\activate
-```
-
-### Step 3: Install Dependencies
-
-```bash
-# Install required packages
-pip install -r requirements.txt
-```
-
-### Step 4: Set Up Environment Variables
-
-```bash
-# Copy example environment file
+# 환경 변수 설정
 cp .env.example .env
-
-# Edit .env file with your configuration
-# Add API keys and configuration parameters
+# .env 파일 편집 (이메일 설정 등)
 ```
 
-### Step 5: Initialize Vector Database
+### 3. 시스템 시작
 
 ```bash
-# Initialize the vector store
-python scripts/init_database.py
+# 전체 스택 시작
+docker-compose up -d
+
+# 로그 확인
+docker-compose logs -f api1
+
+# Ollama 모델 다운로드 (최초 1회)
+docker exec -it rag-ai-project-ollama1-1 ollama pull qwen2.5-coder:32b
+docker exec -it rag-ai-project-ollama1-1 ollama pull nomic-embed-text
+docker exec -it rag-ai-project-ollama1-1 ollama pull llava
+
+# 다른 Ollama 서버들도 동일하게
+docker exec -it rag-ai-project-ollama2-1 ollama pull qwen2.5-coder:32b
+docker exec -it rag-ai-project-ollama3-1 ollama pull qwen2.5-coder:32b
 ```
 
-### Step 6: Ingest Documents
+### 4. API 테스트
 
 ```bash
-# Add your documents to the knowledge base
-python scripts/ingest_documents.py --input ./documents
-```
+# Health Check
+curl http://localhost/api/v1/health
 
-## 💡 Usage
-
-### Basic Usage
-
-```python
-from rag_ai import RAGSystem
-
-# Initialize the RAG system
-rag = RAGSystem(
-    vector_store="chroma",
-    llm_model="gpt-4",
-    embedding_model="text-embedding-ada-002"
-)
-
-# Query the system
-response = rag.query("What is retrieval-augmented generation?")
-print(response.answer)
-print(response.sources)
-```
-
-### Advanced Usage
-
-```python
-from rag_ai import RAGSystem, RAGConfig
-
-# Custom configuration
-config = RAGConfig(
-    chunk_size=1000,
-    chunk_overlap=200,
-    top_k_documents=5,
-    temperature=0.7,
-    max_tokens=500
-)
-
-# Initialize with custom config
-rag = RAGSystem(config=config)
-
-# Add documents
-rag.add_documents([
-    "path/to/document1.pdf",
-    "path/to/document2.txt"
-])
-
-# Query with filters
-response = rag.query(
-    "Explain machine learning",
-    filters={"category": "AI", "year": 2024},
-    return_sources=True
-)
-
-# Access detailed response
-print(f"Answer: {response.answer}")
-print(f"Confidence: {response.confidence}")
-print(f"Sources: {response.sources}")
-```
-
-### Running the API Server
-
-```bash
-# Start the REST API server
-python -m rag_ai.api --host 0.0.0.0 --port 8000
-```
-
-```bash
-# Make API request
-curl -X POST http://localhost:8000/query \
+# 자연어 검색
+curl -X POST http://localhost/api/v1/search/natural \
   -H "Content-Type: application/json" \
-  -d '{"query": "What is RAG?", "top_k": 5}'
+  -d '{
+    "query": "AI 논문 검색해서 요약본을 hong@example.com에게 오전 10시에 메일로 보내줘"
+  }'
 ```
 
-### Running the Web Interface
-
-```bash
-# Start the web interface
-python -m rag_ai.web
-```
-
-Visit `http://localhost:8000` in your browser to access the chat interface.
-
-## ⚙️ Configuration
-
-Edit the `config.yaml` file to customize the system behavior:
-
-```yaml
-# Model Configuration
-llm:
-  provider: "openai"  # openai, anthropic, huggingface, local
-  model: "gpt-4"
-  temperature: 0.7
-  max_tokens: 1000
-
-# Embedding Configuration
-embeddings:
-  model: "text-embedding-ada-002"
-  dimension: 1536
-
-# Vector Store Configuration
-vector_store:
-  type: "chroma"  # chroma, pinecone, weaviate, faiss
-  path: "./data/vectorstore"
-  collection_name: "documents"
-
-# Retrieval Configuration
-retrieval:
-  top_k: 5
-  similarity_threshold: 0.7
-  rerank: true
-
-# Document Processing
-processing:
-  chunk_size: 1000
-  chunk_overlap: 200
-  supported_formats: [".pdf", ".txt", ".md", ".docx"]
-```
-
-## 📁 Project Structure
+## 📁 프로젝트 구조
 
 ```
 rag-ai-project/
-├── rag_ai/
-│   ├── __init__.py
-│   ├── core/
-│   │   ├── rag_system.py
-│   │   ├── embeddings.py
-│   │   ├── retriever.py
-│   │   └── llm.py
-│   ├── processing/
-│   │   ├── document_loader.py
-│   │   ├── chunker.py
-│   │   └── preprocessor.py
-│   ├── vectorstore/
-│   │   ├── base.py
-│   │   ├── chroma.py
-│   │   └── pinecone.py
-│   ├── api/
-│   │   ├── app.py
-│   │   └── routes.py
-│   └── web/
-│       ├── app.py
-│       └── templates/
-├── scripts/
-│   ├── init_database.py
-│   ├── ingest_documents.py
-│   └── evaluate.py
-├── tests/
-│   ├── test_rag_system.py
-│   ├── test_retriever.py
-│   └── test_embeddings.py
-├── documents/
-├── data/
-│   └── vectorstore/
-├── config.yaml
-├── .env.example
-├── requirements.txt
-├── README.md
-└── LICENSE
+├── docker-compose.yml          # 전체 인프라 정의
+├── .env.example                # 환경 변수 템플릿
+├── requirements.txt            # Python 의존성
+│
+├── nginx/                      # 로드 밸런서
+│   └── nginx.conf
+│
+├── api/                        # FastAPI 애플리케이션
+│   ├── main.py
+│   ├── config.py
+│   ├── models.py
+│   ├── routers/                # API 엔드포인트
+│   ├── services/               # 핵심 서비스
+│   └── agents/                 # LangGraph 에이전트
+│
+├── workers/                    # Celery 워커
+│   ├── celery_app.py
+│   └── tasks.py
+│
+├── database/                   # DB 마이그레이션
+│   └── migrations/
+│
+└── tests/                      # 테스트
 ```
 
-## 🛠️ Technologies
+## 🔧 주요 컴포넌트
 
-- **LangChain**: Framework for building LLM applications
-- **OpenAI API**: GPT models and embeddings
-- **ChromaDB**: Vector database for similarity search
-- **FAISS**: Facebook AI Similarity Search
-- **HuggingFace Transformers**: Open-source models and embeddings
-- **FastAPI**: Modern web framework for building APIs
-- **Streamlit**: Interactive web interface
-- **PyPDF2**: PDF document processing
-- **python-docx**: DOCX document processing
-- **tiktoken**: Token counting and management
+### API Gateway (FastAPI)
+- 3개 인스턴스로 로드 밸런싱
+- Rate Limiting
+- 캐싱
+- 스트리밍 지원
 
-## 🤝 Contributing
+### Vector Database (Milvus)
+- 텍스트, 이미지, 문서 별도 컬렉션
+- ANN 검색
+- 분산 아키텍처 지원
 
-Contributions are welcome! Please follow these steps:
+### LLM Layer (Ollama)
+- 3개 GPU 서버로 분산
+- 로드 밸런싱
+- 자동 Failover
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Async Processing (Celery)
+- 이메일 전송
+- 문서 처리
+- 스케줄링
 
-Please ensure your code follows PEP 8 style guidelines and includes appropriate tests.
+## 📊 모니터링
 
-## 📄 License
+- **Prometheus**: http://localhost:9090
+- **Grafana**: http://localhost:3000 (admin/admin)
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## 🔐 보안
 
-## 📞 Contact
+- Rate Limiting: 초당 100 요청
+- SSL/TLS 지원
+- API 키 인증 (선택사항)
 
-**Chulho Jeon** - [@jeonchulho](https://github.com/jeonchulho)
+## 📈 성능
 
-Project Link: [https://github.com/jeonchulho/rag-ai-project](https://github.com/jeonchulho/rag-ai-project)
+- **동시 사용자**: 500+
+- **응답 시간**: < 2초 (캐시 히트 시)
+- **처리량**: 1000+ requests/sec
 
-## 🙏 Acknowledgments
+## 🛠️ 개발
 
-- OpenAI for providing powerful LLM APIs
-- LangChain community for excellent tools and documentation
-- ChromaDB team for the efficient vector database
-- All contributors who have helped improve this project
+### 로컬 개발 환경
+
+```bash
+# API 서버만 실행
+cd api
+pip install -r requirements.txt
+uvicorn main:app --reload
+
+# Celery Worker 실행
+cd workers
+celery -A celery_app worker --loglevel=info
+```
+
+### 테스트
+
+```bash
+pytest tests/ -v
+```
+
+## 📝 API 문서
+
+시스템 시작 후 http://localhost/docs 에서 Swagger UI를 통해 전체 API 문서를 확인할 수 있습니다.
+
+## 🤝 기여
+
+이슈와 PR은 언제나 환영합니다!
+
+## 📄 라이선스
+
+MIT License
+
+## 👨‍💻 제작자
+
+jeonchulho
 
 ---
 
-**⭐ If you find this project useful, please consider giving it a star!**
+**Note**: 이 프로젝트는 프로덕션 환경을 위한 엔터프라이즈급 RAG 시스템입니다. 개발 환경에서는 docker-compose.dev.yml을 사용하세요.
