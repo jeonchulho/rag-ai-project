@@ -5,19 +5,19 @@
 ```mermaid
 graph TD
     subgraph 문서업로드/인덱싱
-        A[Client<br>자연어 명령 요청] --> B[upload/document<br>PDF 업로���]
-        B --> C[Document Ingestion<br>텍스트 추출+청킹]
-        C --> D[Vector Store<br>임베딩 DB 저장]
+        A[Client\n자연어 명령 요청] --> B[upload/document\nPDF 업로드]
+        B --> C[Document Ingestion\n텍스트 추출+청킹]
+        C --> D[Vector Store\n임베딩 DB 저장]
     end
 
     subgraph 워크플로우
-        E[Client<br>자연어 명령<br>"aaa.PDF 내용을 요약해서<br>전철호에게 10시에 메일 보내줘"] --> F[search_agent.py]
-        F --> G[Analyze Intent<br>(llm_service.summarize, Entities)]
-        G --> H[Extract Entities<br>메일/시간/키워드 추출]
-        H --> I[Vector Search<br>PDF 문서 인덱스에서<br>관련 청크 찾기]
-        I --> J[Summarize Results<br>llm_service.summarize(청크)]
-        J --> K[Schedule Action<br>workers/tasks.py:send_email_task]
-        K --> L[Task Queue<br>Celery/Mail 발송 예약]
+        E[Client\n자연어 명령\n(aaa.PDF 내용을 요약해서\n전철호에게 10시에 메일 보내줘)] --> F[search_agent.py]
+        F --> G[Analyze Intent\n(llm_service.summarize, Entities)]
+        G --> H[Extract Entities\n메일/시간/키워드 추출]
+        H --> I[Vector Search\nPDF 문서 인덱스에서\n관련 청크 찾기]
+        I --> J[Summarize Results\nllm_service.summarize(청크)]
+        J --> K[Schedule Action\nworkers/tasks.py:send_email_task]
+        K --> L[Task Queue\nCelery/Mail 발송 예약]
     end
 ```
 
