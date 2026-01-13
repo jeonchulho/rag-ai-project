@@ -1,0 +1,45 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'rag-system'
+    environment: 'production'
+
+scrape_configs:
+  # API servers
+  - job_name: 'fastapi'
+    static_configs:
+      - targets:
+          - 'api1:8000'
+          - 'api2:8000'
+          - 'api3:8000'
+        labels:
+          service: 'api'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+        labels:
+          service: 'redis'
+
+  # PostgreSQL
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+        labels:
+          service: 'postgres'
+
+  # Milvus
+  - job_name: 'milvus'
+    static_configs:
+      - targets: ['milvus-standalone:9091']
+        labels:
+          service: 'milvus'
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
